@@ -60,7 +60,7 @@ int main()
     int vertex;
     graphType* g = NULL;
     g = (graphType *)malloc(sizeof(graphType));
-
+		printf("\t[-----[¿Ã ∏Ì ±π]  [2017038100]-----]\n");
 
 	do{
 		printf("\n\n");
