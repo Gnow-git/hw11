@@ -31,6 +31,15 @@ int isEmpty(){                          // 스택이 공백 상태인지 확인
     else return 0;
 }
 
+typedef struct QNode{                   // 연결큐의 노드를 구조체로 정의
+    int data;
+    struct QNode *link;
+}QNode;
+
+typedef struct{                         // 연결큐에서 사용하는 포인터 front와 rear를 구조체로 정의
+    QNode *front, *rear;
+}LQueueType;
+
 void initializeGraph(graphType* g);             // 그래프를 생성하면서 초기화하는 함수
 void insertVertex(graphType* g, int v);         // Vertex를 삽입하는 함수
 void insertEdge(graphType* g, int u, int v);    // 그래프의 간선을 삽입하는 함수
@@ -38,6 +47,11 @@ void printGraph(graphType* g);                  // 그래프를 출력하는 함수
 void push(int item);                            // 스택의 top에 원소를 삽입하는 함수
 int pop();                                      // 스택의 top에 원소를 삭제하는 함수
 void DFS_adjList(graphType* g, int v);          // 그래프 g의 정점 v에 대한 Deapth First Search 함수
+LQueueType *createLinkedQueue();                // 공백 연결 큐를 생성하는 함수
+int isEmptyQueue(LQueueType *LQ);               // 큐의 공백검사하는 함수
+void enQueue(LQueueType *LQ, int item);         // 큐에 원소를 삽입하는 함수
+int deQueue(LQueueType *LQ);                    // 큐에 원소를 삭제하는 함수
+void BFS_adjList(graphType* g, int v);
 
 int main()
 {
@@ -95,7 +109,10 @@ int main()
 			break;
 
 		case 'b': case 'B':
-		
+		    printf("너비 우선 탐색 = ");
+            BFS_adjList(g, 0);
+            getchar();
+			break;
 			break;
 
 		default:
@@ -201,6 +218,69 @@ void DFS_adjList(graphType* g, int v){                  // 그래프 g의 정점 v에 �
                 w = g->adjList_H[v];                    // v에 대한 인접노드를 w로 지정 194행에서 다시 실행
             }
             else w = w->link;
+        }
+    }
+}
+
+LQueueType *createLinkedQueue(){                        // 공백 연결 큐를 생성하는 함수
+    LQueueType *LQ;
+    LQ =(LQueueType *)malloc(sizeof(LQueueType));       // LQ라는 연결 큐 생성
+    LQ -> front = NULL;                                 // 초기 큐이므로 fornt NULL
+    LQ -> rear = NULL;                                  // 초기 큐이므로 rear NULL
+    return LQ;
+}
+
+int isEmptyQueue(LQueueType *LQ){                       // 큐의 공백검사하는 함수
+    if(LQ -> front == NULL){
+        printf("\n Linked Queue is empty! \n");
+        return 1;
+    }
+    else return 0;
+}
+
+void enQueue(LQueueType *LQ, int item){                 // 큐에 원소를 삽입하는 함수
+    QNode *newNode = (QNode *)malloc(sizeof(QNode));    // 삽입할 새 노드 할당
+    newNode -> data = item;                             // 새 노드에 대한 메모리 할당, 데이터 필드에 삽입할 item저장
+    newNode -> link = NULL;                             // 마지막 노드이므로  NULL
+    if(LQ -> front == NULL){                            // 연결큐가 공백상태인지 검사 공백일 경우 front, rear 둘다 새 노드를 가리키도록 설정
+        LQ -> front = newNode;
+        LQ -> rear = newNode;
+    }
+    else{
+        LQ ->rear ->link = newNode;                     // 마지막 노드가 새 노드를 가리키도록 설정
+        LQ ->rear = newNode;
+    }
+}
+
+int deQueue(LQueueType *LQ){                            // 큐에 원소를 삭제하는 함수
+    QNode *old = LQ -> front;
+    int item;
+    if (isEmptyQueue(LQ)) return 0;
+    else{
+        item = old -> data;                             // 삭제할 원소를 old가 가리키게 하여 삭제할 노드 지정
+        LQ -> front = LQ ->front -> link;               // front 재설정
+        if(LQ->front == NULL)
+            LQ -> rear = NULL;
+        free(old);
+        return item;
+    }
+}
+
+void BFS_adjList(graphType* g, int v){                  // 그래프 g의 정점 v에 대한 Breath First Search 함수
+    graphNode* w;
+    LQueueType* Q;                                      // 큐 생성
+    Q = createLinkedQueue();
+    g -> visited[v] = TRUE;                             // 시작 정점 TRUE로 지정
+    printf(" %c", v + 65);
+    enQueue(Q, v);
+
+    while(!isEmptyQueue(Q)){                            // 공백이 아닐경우 반복
+        v = deQueue(Q);
+        for(w = g->adjList_H[v]; w; w = w->link)
+        if(!g -> visited[w ->vertex]){                  // 방문하지 않은 정점일경우
+            g->visited[w->vertex] = TRUE;               // TRUE로 지정
+            printf(" %c", w -> vertex + 65);
+            enQueue(Q, w->vertex);
         }
     }
 }
