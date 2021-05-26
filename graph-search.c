@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define MAX_VERTEX		10          // 헤드 포인터 배열의 최대 크기를 10으로 지정
+#define FALSE       0
+#define TRUE        1
 
 
 typedef struct graphNode {          // 인접 리스트의 노드 구조를 구조체로 정의
@@ -12,22 +14,36 @@ typedef struct graphNode {          // 인접 리스트의 노드 구조를 구조체로 정의
 typedef struct graphType{               // 그래프를 인접 리스트로 표현하기 위한 구조체로 정의
     int n;                              // 그래프의 정점 개수
     graphNode* adjList_H[MAX_VERTEX];   // 그래프 정점에 대한 헤드 포인터 배열
+    int visited[MAX_VERTEX];             // 정점에 대한 방문을 표시하기 위한 배열
 } graphType;
 
+typedef int element;                    // 스택 원소의 자료형을 int로 정의
 
+typedef struct stackNode{               // 스택의 노드를 구조체로 정의
+    int data;
+    struct stackNode *link;
+}stackNode;
+
+stackNode* top;                         // 스택의 top 노드를 지정하기 위해 포인터  top 선언
+
+int isEmpty(){                          // 스택이 공백 상태인지 확인
+    if(top == NULL) return 1;
+    else return 0;
+}
 
 void initializeGraph(graphType* g);             // 그래프를 생성하면서 초기화하는 함수
 void insertVertex(graphType* g, int v);         // Vertex를 삽입하는 함수
 void insertEdge(graphType* g, int u, int v);    // 그래프의 간선을 삽입하는 함수
 void printGraph(graphType* g);                  // 그래프를 출력하는 함수
-
+void push(int item);                            // 스택의 top에 원소를 삽입하는 함수
+int pop();                                      // 스택의 top에 원소를 삭제하는 함수
+void DFS_adjList(graphType* g, int v);          // 그래프 g의 정점 v에 대한 Deapth First Search 함수
 
 int main()
 {
 	char command;
-	int i;
+	int i, u;
     int vertex;
-    int u;
     graphType* g = NULL;
     g = (graphType *)malloc(sizeof(graphType));
 
@@ -63,7 +79,9 @@ int main()
 			break;
 
 		 case 'd': case 'D':
-
+            printf("깊이 우선 탐색 = ");
+            DFS_adjList(g, 0);
+            getchar();
 			break;
 
 		case 'p': case 'P':
@@ -90,11 +108,14 @@ int main()
 	return 1;
 }
 
-void initializeGraph(graphType* g) {        // 그래프를 생성하면서 초기화하는 함수
+
+void initializeGraph(graphType* g) {        // 탐색을 위해 초기에 공백 그래프로 생성하면서 초기화하는 함수
     int v;
     g-> n = 0;                              // 그래프의 정점 개수를 0으로 초기화
-    for(v = 0; v<MAX_VERTEX; v++)
+    for(v = 0; v<MAX_VERTEX; v++){
+    g-> visited[v] = FALSE;                 // 그래프의 visited 배열을 FALSE로 초기화
     g-> adjList_H[v] = NULL;                // 그래프의 정점에 대한 헤드 포인터 배열 NULL로 초기화
+    }
 
 }
 
@@ -132,6 +153,54 @@ void printGraph(graphType* g)               // 그래프를 출력하는 함수
         while(p){
             printf("-> %c", p->vertex+65);              // 해당 정점일때까지 인접 정점을 리스트로 출력한다.
             p = p->link;                                // 링크따라 이동한다.
+        }
+    }
+}
+
+void push(int item){                                // 스택의 top에 item을 push하는 함수
+    stackNode* temp = (stackNode *)malloc(sizeof(stackNode));
+    temp -> data = item;
+    temp -> link = top;                                 // 삽입 노드를 top의 위에 push
+    top = temp;                                         // top 위치를 push한 함수로 이동
+}
+
+int pop(){                                          // 스택의 top item을 pop하는 함수
+    int item;
+    stackNode* temp = top;
+
+    if(isEmpty()){                                    // 스택이 공백일시
+        printf("\n\n 스택이 비어 있습니다.\n");
+        return 0;
+    }
+    else{                                               // 스택이 공백이 아닐경우
+        item = temp -> data;
+        top = temp -> link;                             // top을 아래 노드로 이동
+        free(temp);                                     // 삭제된 노드 메모리 할당 해제
+        return item;
+    }
+}
+
+void DFS_adjList(graphType* g, int v){                  // 그래프 g의 정점 v에 대한 Deapth First Search 함수
+    graphNode* w;
+    top = NULL;
+    push(v);
+    g -> visited[v] = TRUE;                             // 정점 v는 방문하였기때문에 TRUE로 설정
+    printf(" %c", v + 65);                              // 정점 출력
+
+    while (!isEmpty()){                                 // 스택이 공백이 아닐경우 Deapth First Search
+        v = pop();
+        w = g->adjList_H[v];
+
+        while(w){
+            if(!g->visited[w->vertex]){                 // 정점을 방문하지 않았을 경우
+                if(isEmpty()) push(v);                  // 공백일 경우 push
+                push(w->vertex);                        // w를 push
+                g->visited[w->vertex] = TRUE;           // w를 TRUE로 지정
+                printf(" %c", w-> vertex + 65);
+                v = w ->vertex;                         // 다음 정점 이동을 위해 v로 설정
+                w = g->adjList_H[v];                    // v에 대한 인접노드를 w로 지정 194행에서 다시 실행
+            }
+            else w = w->link;
         }
     }
 }
